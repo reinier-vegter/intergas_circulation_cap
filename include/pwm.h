@@ -11,19 +11,6 @@ unsigned long pwmCheckInterval = 3000;
 unsigned long pwmCheckpreviousMillis = 0;
 unsigned long currentPwmMillis = millis();
 
-int roundValTo5(int input)
-{
-  int roundfactor = 5;
-  int threshold = 3;
-  int output = input;
-  int rem = input % roundfactor;
-  if (rem < threshold)
-    output -= rem;
-  else
-    output += roundfactor - rem;
-  return output;
-}
-
 void pwmSetup(byte pin_input, byte pin_output)
 {
   _PWM_IN_PIN = pin_input;
