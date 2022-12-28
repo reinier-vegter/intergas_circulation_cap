@@ -39,7 +39,7 @@ This is (most probably) a safety measure, so that when there's a connection prob
 ### Arduino
 This Arduino project simply measures the duty cycle from the heater interface (`in`), applies a limit / cap to it, and reproduces another PWM signal based on that (`out`).
 
-Note that the Wilo pump mention above needs `5v` for the `HIGH` signal, meaning that the typical `3v` arduino boards don suffice.
+Note that the Wilo pump mentioned above needs `5v` for the `HIGH` signal, meaning that the typical `3v` arduino boards don suffice.
 
 For this reason it's adviced to use the `Arduino Uno Wifi Rev2` board (operates at `5v`).
 
