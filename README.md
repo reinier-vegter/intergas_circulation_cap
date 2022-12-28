@@ -84,6 +84,7 @@ After this,
 # Additional hints
  - Make an automation with HA or Node Red to use a lower cap at night.
  - In case you have [ESPAltherma](https://raomin.github.io/ESPAltherma/), use the max cap in case the temperature delta (input/output temp of your heater/heatpump) is over 10°C .
+ - Without Wifi connection, the project will (currently) not proceed to operation and will now work. To use it stand alone, just remove the Wifi and MQTT start code from the `setup()` method.
 
 # Possible future changes and improvements (please make a PR)
 
