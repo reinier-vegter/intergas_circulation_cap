@@ -23,6 +23,7 @@ char pass[] = SECRET_PASS;
 int default_cap_pct = DEFAULT_CAP_PCT;
 int pwm_in_pin = PWM_IN_PIN;
 int pwm_out_pin = PWM_OUT_PIN;
+int relay_out_pin = RELAY_OUT_PIN;
 char ha_device_name[] = HA_DEVICE_NAME;
 IPAddress ip;
 unsigned long currentMillis = millis();
@@ -31,6 +32,10 @@ int wifiStatus = WL_IDLE_STATUS;
 WiFiClient client;
 unsigned long wifiCheckInterval = 20000;
 unsigned long wifiCheckpreviousMillis = 0;
+int pingResult;
+bool connectionProblem = false;
+int connectionProblemCount = 0;
+int connectionProblemRebootTheshold = 5;
 
 unsigned long pwmSetInterval = 3000;
 unsigned long pwmSetPreviousMillis = 0;
@@ -45,7 +50,11 @@ HASensorNumber cvPumpInputPwm("cvPumpInput");
 HASensorNumber cvPumpOutputPwm("cvPumpOutput");
 HASensorNumber cvPumpInputPct("cvPumpInputPct");
 HASensorNumber cvPumpOutputPct("cvPumpOutputPct");
+HASwitch switch1("cvSwitch1");
 int currentPumpCap = 100;
+
+// Standard reset function
+void(* resetFunc) (void) = 0;
 
 void printWifiStatus()
 {
@@ -114,6 +123,13 @@ void setupMqtt()
   cvPumpOutputPct.setIcon("mdi:gauge");
   cvPumpOutputPct.setUnitOfMeasurement("%");
   cvPumpOutputPct.setDeviceClass("power_factor");
+
+  // Additional relay
+  if (AD_RELAY_ENABLED) {
+    switch1.setName("Additional switch");
+    switch1.setIcon("mdi:electric-switch");
+  }
+
   mqtt.begin(BROKER_ADDR);
 }
 
@@ -149,44 +165,66 @@ void setup()
 
 void loop()
 {
-  // if WiFi is down, try reconnecting
   currentMillis = millis();
 
-  int status;
-  status = WiFi.status();
-  if ((status == WL_DISCONNECTED || status == WL_CONNECTION_LOST) && (currentMillis - wifiCheckpreviousMillis >= wifiCheckInterval))
-  {
-    Serial.println("Reconnecting to WiFi...");
-    WiFi.disconnect();
+  // Check connections.
+  if (currentMillis - wifiCheckpreviousMillis >= wifiCheckInterval) {
     wifiCheckpreviousMillis = currentMillis;
-    wifiConnect();
-    setupMqtt();
-  }
 
-  // Update MQTT sensor, read incoming PWM. 
-  int pwmIn = readPwmLoop();
-  cvPumpInputPwm.setValue(pwmIn);
-  int pwmInPct = round((float) pwmIn * 100 / 255);
-  cvPumpInputPct.setValue(pwmInPct);
-
-  // Update pump output.
-  if (currentMillis - pwmSetPreviousMillis >= pwmSetInterval)
-  {
-    pwmSetPreviousMillis = currentMillis;
-    int cap = 100; // Safety, no cap.
-    cap = (cvPumpCap.getCurrentState().isSet()) ? (int) cvPumpCap.getCurrentState().toInt32() : cap;
-
-    if (cap < 15) {
-      Serial.print(F("Cap under 15%! Should not be possible, correcting: "));
-      Serial.println(cap);
+    // If WiFi is down, try reconnecting.
+    int status;
+    status = WiFi.status();
+    if (status == WL_DISCONNECTED || status == WL_CONNECTION_LOST)
+    {
+      connectionProblem = true;
     }
 
-    int cap255 = round(((float) cap / 100) * 255);
-    int pwmOut = capPwmOutput(cap255, pwmIn);
-    cvPumpOutputPwm.setValue(pwmOut);
-    int pwmOutPct = round((float) pwmOut * 100 / 255);
-    cvPumpOutputPct.setValue(pwmOutPct);
+    // Ping MQTT server, or reboot.
+    pingResult = WiFi.ping(BROKER_ADDR);
+    if (pingResult < 0) {
+      connectionProblem = true;
+    }
   }
 
-  mqtt.loop();
+  // Fix issues.
+  if (connectionProblem) {
+    if (connectionProblemCount >= connectionProblemRebootTheshold) {
+      resetFunc();
+    }
+
+    connectionProblem = false;
+    connectionProblemCount++;
+    Serial.println("Reconnecting to WiFi...");
+    WiFi.disconnect();
+    wifiConnect();
+    setupMqtt();
+  } else {
+
+    // Update MQTT sensor, read incoming PWM. 
+    int pwmIn = readPwmLoop();
+    cvPumpInputPwm.setValue(pwmIn);
+    int pwmInPct = round((float) pwmIn * 100 / 255);
+    cvPumpInputPct.setValue(pwmInPct);
+
+    // Update pump output.
+    if (currentMillis - pwmSetPreviousMillis >= pwmSetInterval)
+    {
+      pwmSetPreviousMillis = currentMillis;
+      int cap = 100; // Safety, no cap.
+      cap = (cvPumpCap.getCurrentState().isSet()) ? (int) cvPumpCap.getCurrentState().toInt32() : cap;
+
+      if (cap < 15) {
+        Serial.print(F("Cap under 15%! Should not be possible, correcting: "));
+        Serial.println(cap);
+      }
+
+      int cap255 = round(((float) cap / 100) * 255);
+      int pwmOut = capPwmOutput(cap255, pwmIn);
+      cvPumpOutputPwm.setValue(pwmOut);
+      int pwmOutPct = round((float) pwmOut * 100 / 255);
+      cvPumpOutputPct.setValue(pwmOutPct);
+    }
+
+    mqtt.loop();
+  }
 }
