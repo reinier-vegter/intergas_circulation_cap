@@ -18,3 +18,12 @@ const byte PWM_OUT_PIN = 5;
 
 // Default circulation cap (%) in case of no instruction.
 const byte DEFAULT_CAP_PCT = 60;
+
+// Additional relay
+const bool AD_RELAY_ENABLED = true;
+const byte RELAY_OUT_PIN = 2;
+
+// Connection ping check.
+// This will enable a ping-check against the MQTT server, alongside the regular wifi connection check.
+// After 5 connection issue instances, the board will reset itself.
+const bool CONNECTION_CHECK_PING = true;

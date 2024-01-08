@@ -180,9 +180,11 @@ void loop()
     }
 
     // Ping MQTT server, or reboot.
-    pingResult = WiFi.ping(BROKER_ADDR);
-    if (pingResult < 0) {
-      connectionProblem = true;
+    if (CONNECTION_CHECK_PING) {
+      pingResult = WiFi.ping(BROKER_ADDR);
+      if (pingResult < 0) {
+        connectionProblem = true;
+      }
     }
   }
 
