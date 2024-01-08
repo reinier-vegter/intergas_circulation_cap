@@ -16,10 +16,10 @@
 #include <ArduinoHA.h>
 #include <pwm.h>
 
-#include "arduino_secrets.h"
-///////please enter your sensitive data in the Secret tab/arduino_secrets.h
-char ssid[] = SECRET_SSID; // your network SSID (name)
-char pass[] = SECRET_PASS; // your network password (use for WPA, or use as key for WEP)
+#include "config.h"
+// Put configuration in include/config.h
+char ssid[] = SECRET_SSID;
+char pass[] = SECRET_PASS;
 int default_cap_pct = DEFAULT_CAP_PCT;
 int pwm_in_pin = PWM_IN_PIN;
 int pwm_out_pin = PWM_OUT_PIN;
