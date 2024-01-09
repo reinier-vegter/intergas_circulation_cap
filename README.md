@@ -1,6 +1,6 @@
 # Intergas circulation pump cap / limiter.
 
->> This was just a Friday night project, but allows me to sleep better.  
+>> This was just a Friday night project that allows me to sleep better.  
 You might as well find code improvements; just bear with me and let me know :)
 
 This Arduino project was developed for the Daikin Altherma `NHY2KOMB-A / EJHA-AV3` bundle, based on the `Arduino Uno Wifi Rev2` board.
@@ -58,13 +58,12 @@ To verify this, just follow the signal wire (the one stickered with `No 230V!`) 
  - The Arduino must be grounded to the ground strip of the heater. The `black` wire from the signal cable is also grounded here.
 
 # Setup
-
 This project makes the following assumptions:
  - MQTT up and running on some IP address
  - Home assistant with MQTT integration up and running (just to control the cap and see in/out PWM signals)
  - Wifi with WPA/WPA2
  - An `Arduino Uno Wifi Rev2` board
- - You're not an idiot that will connect this board to some `230V` bus :)
+ - You're not an idiot that will connect this board to some `230V` bus on the furnice :)
 
 Steps:
   - Setup Visual Code with/or Platform IO
@@ -81,15 +80,25 @@ After this,
    - PWM in/out, both 8 bit values and percentage
    - a cap number input slider, allowing you to set it from HA
 
+## Additional relay
+Could for example be used in a scenario where
+  - there's an opentherm thermostat
+  - there's a woodstove burning, hence thermostat switches to no heating
+  - the rest of your house gets cold
+ In this case the relay might be connected to the on/off terminal of your furnice/boiler.
+ Check if the boiler is capable of running both opentherm and on/off at the same time.
+
+To realise, set `AD_RELAY_ENABLED` to `true` and `RELAY_OUT_PIN` to another free digital pin,
+like pin nr 2.
+Since a relay board usually also needs both a 5v and a ground pin, don't forget to connect those.
+
 # Additional hints
  - Make an automation with HA or Node Red to use a lower cap at night.
  - In case you have [ESPAltherma](https://raomin.github.io/ESPAltherma/), use the max cap in case the temperature delta (input/output temp of your heater/heatpump) is over 10°C .
- - Without Wifi connection, the project will (currently) not proceed to operation and will now work. To use it stand alone, just remove the Wifi and MQTT start code from the `setup()` method.
+ - Without Wifi connection, the project will (currently) not proceed to operation and will now work. To use it stand alone, just remove the Wifi and MQTT start code from the `setup()` method and add an additional cap value parameter somewhere set to your liking.
 
 # Possible future changes and improvements (please make a PR)
-
  - Configure MQTT credentials
    See https://dawidchyrzynski.github.io/arduino-home-assistant/documents/library/mqtt-security.html 
  - Configure MQTT TLS
  - Make the PWM stickiness configurable in HA
-
